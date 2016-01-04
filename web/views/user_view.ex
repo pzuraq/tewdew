@@ -1,17 +1,12 @@
 defmodule Tewdew.UserView do
-  use Tewdew.Web, :view
+  use JaSerializer.PhoenixView
 
-  def render("index.json", %{users: users}) do
-    %{data: render_many(users, Tewdew.UserView, "user.json")}
-  end
+  location "/api/users/:id"
+  attributes [:email]
 
-  def render("show.json", %{user: user}) do
-    %{data: render_one(user, Tewdew.UserView, "user.json")}
-  end
+  has_many :task_lists, serializer: Tewdew.TaskListView, include: true
 
-  def render("user.json", %{user: user}) do
-    %{id: user.id,
-      email: user.email,
-      password: user.password}
+  def task_lists(user, _conn) do
+    user.task_lists
   end
 end

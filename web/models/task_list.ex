@@ -4,8 +4,11 @@ defmodule Tewdew.TaskList do
   @primary_key {:id, Ecto.UUID, []}
 
   schema "task_lists" do
-    field :user_id, Ecto.UUID
     field :name, :string
+
+    belongs_to :user, Tewdew.User, type: Ecto.UUID
+
+    has_many :tasks, Tewdew.Task
 
     timestamps
   end
