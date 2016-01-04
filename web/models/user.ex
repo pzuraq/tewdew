@@ -7,6 +7,8 @@ defmodule Tewdew.User do
     field :email, :string
     field :password, :string
 
+    has_many :task_lists, Tewdew.TaskList
+
     timestamps
   end
 

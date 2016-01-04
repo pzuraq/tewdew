@@ -3,45 +3,45 @@ defmodule Tewdew.UserController do
 
   alias Tewdew.User
 
-  plug :scrub_params, "user" when action in [:create, :update]
+  plug :scrub_params, "data" when action in [:create, :update]
 
   def index(conn, _params) do
-    users = Repo.all(User)
-    render(conn, "index.json", users: users)
+    render conn, model: Repo.all(User)
   end
 
-  def create(conn, %{"user" => user_params}) do
-    changeset = User.changeset(%User{}, user_params)
+  def show(conn, %{"id" => id}) do
+    user = User |> Repo.get!(id) |> Repo.preload [:task_lists]
+    render conn, model: user
+  end
+
+  def create(conn, %{"data" => %{"attributes" => attributes}}) do
+    changeset = User.changeset(%User{}, attributes)
 
     case Repo.insert(changeset) do
       {:ok, user} ->
         conn
         |> put_status(:created)
         |> put_resp_header("location", user_path(conn, :show, user))
-        |> render("show.json", user: user)
+        |> render(:show, data: user)
       {:error, changeset} ->
         conn
         |> put_status(:unprocessable_entity)
-        |> render(Tewdew.ChangesetView, "error.json", changeset: changeset)
+        |> render(:errors, data: changeset)
     end
   end
 
-  def show(conn, %{"id" => id}) do
+  def update(conn, %{"id" => id, "data" => %{"attributes" => attributes}}) do
     user = Repo.get!(User, id)
-    render(conn, "show.json", user: user)
-  end
-
-  def update(conn, %{"id" => id, "user" => user_params}) do
-    user = Repo.get!(User, id)
-    changeset = User.changeset(user, user_params)
+    changeset = User.changeset(user, attributes)
 
     case Repo.update(changeset) do
       {:ok, user} ->
-        render(conn, "show.json", user: user)
+        conn
+        |> render(:show, data: user)
       {:error, changeset} ->
         conn
         |> put_status(:unprocessable_entity)
-        |> render(Tewdew.ChangesetView, "error.json", changeset: changeset)
+        |> render(:errors, data: changeset)
     end
   end
 

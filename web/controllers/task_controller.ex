@@ -3,45 +3,46 @@ defmodule Tewdew.TaskController do
 
   alias Tewdew.Task
 
-  plug :scrub_params, "task" when action in [:create, :update]
+  plug :scrub_params, "data" when action in [:create, :update]
 
-  def index(conn, _params) do
-    tasks = Repo.all(Task)
-    render(conn, "index.json", tasks: tasks)
+  def index(conn, %{"task_list_id" => task_list_id}) do
+    tasks = Repo.all(from t in Task, where: t.task_list_id == ^task_list_id)
+    render conn, model: tasks
   end
 
-  def create(conn, %{"task" => task_params}) do
-    changeset = Task.changeset(%Task{}, task_params)
+  def show(conn, %{"id" => id}) do
+    task = Task |> Repo.get!(id)
+    render conn, model: task
+  end
+
+  def create(conn, %{"data" => %{"attributes" => attributes}}) do
+    changeset = Task.changeset(%Task{}, attributes)
 
     case Repo.insert(changeset) do
       {:ok, task} ->
         conn
         |> put_status(:created)
         |> put_resp_header("location", task_path(conn, :show, task))
-        |> render("show.json", task: task)
+        |> render(:show, data: task)
       {:error, changeset} ->
         conn
         |> put_status(:unprocessable_entity)
-        |> render(Tewdew.ChangesetView, "error.json", changeset: changeset)
+        |> render(:errors, data: changeset)
     end
   end
 
-  def show(conn, %{"id" => id}) do
+  def update(conn, %{"id" => id, "data" => %{"attributes" => attributes}}) do
     task = Repo.get!(Task, id)
-    render(conn, "show.json", task: task)
-  end
-
-  def update(conn, %{"id" => id, "task" => task_params}) do
-    task = Repo.get!(Task, id)
-    changeset = Task.changeset(task, task_params)
+    changeset = Task.changeset(task, attributes)
 
     case Repo.update(changeset) do
       {:ok, task} ->
-        render(conn, "show.json", task: task)
+        conn
+        |> render(:show, data: task)
       {:error, changeset} ->
         conn
         |> put_status(:unprocessable_entity)
-        |> render(Tewdew.ChangesetView, "error.json", changeset: changeset)
+        |> render(:errors, data: changeset)
     end
   end
 

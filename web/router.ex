@@ -10,7 +10,9 @@ defmodule Tewdew.Router do
   end
 
   pipeline :api do
-    plug :accepts, ["json"]
+    plug :accepts, ["json-api"]
+    # plug JaSerializer.ContentTypeNegotiation
+    # plug JaSerializer.Deserializer
   end
 
   scope "/", Tewdew do
@@ -25,7 +27,10 @@ defmodule Tewdew.Router do
 
     resources "/users", UserController, except: [:new, :edit]
 
-    resources "/task-lists", TaskListController, except: [:new, :edit]
-    resources "/tasks", TaskController, except: [:new, :edit]
+    resources "/task-lists", TaskListController, except: [:new, :edit] do
+      get "/tasks", TaskController, :index
+    end
+
+    resources "/tasks", TaskController, except: [:new, :edit, :index]
   end
 end

@@ -6,21 +6,39 @@ defmodule Tewdew.UserControllerTest do
   @invalid_attrs %{}
 
   setup %{conn: conn} do
-    {:ok, conn: put_req_header(conn, "accept", "application/json")}
+    conn = conn
+           |> put_req_header("accept", "application/vnd.api+json")
+           |> put_req_header("content-type", "application/vnd.api+json")
+
+    {:ok, conn: conn}
   end
 
   test "lists all entries on index", %{conn: conn} do
-    conn = get conn, user_path(conn, :index)
+    conn = conn
+           |> put_req_header("accept", "application/vnd.api+json")
+           |> put_req_header("content-type", "application/vnd.api+json")
+           |> get user_path(conn, :index)
     assert json_response(conn, 200)["data"] == []
   end
 
   test "shows chosen resource", %{conn: conn} do
     user = Repo.insert! %User{id: "7488a646-e31f-11e4-aace-600308960662"}
     conn = get conn, user_path(conn, :show, user)
-    assert json_response(conn, 200)["data"] == %{"id" => user.id,
+    assert json_response(conn, 200)["data"] == %{
+      "type" => "user",
       "id" => user.id,
-      "email" => user.email,
-      "password" => user.password}
+      "attributes" => %{
+        "email" => user.email
+      },
+      "links" => %{
+        "self" => "/api/users/7488a646-e31f-11e4-aace-600308960662"
+      },
+      "relationships" => %{
+        "task-lists" => %{
+          "data" => []
+        }
+      }
+    }
   end
 
   test "does not show resource and instead throw error when id is nonexistent", %{conn: conn} do
@@ -30,26 +48,26 @@ defmodule Tewdew.UserControllerTest do
   end
 
   test "creates and renders resource when data is valid", %{conn: conn} do
-    conn = post conn, user_path(conn, :create), user: @valid_attrs
+    conn = post conn, user_path(conn, :create), data: %{attributes: @valid_attrs}
     assert json_response(conn, 201)["data"]["id"]
     assert Repo.get_by(User, @valid_attrs)
   end
 
   test "does not create resource and renders errors when data is invalid", %{conn: conn} do
-    conn = post conn, user_path(conn, :create), user: @invalid_attrs
+    conn = post conn, user_path(conn, :create), data: %{attributes: @invalid_attrs}
     assert json_response(conn, 422)["errors"] != %{}
   end
 
   test "updates and renders chosen resource when data is valid", %{conn: conn} do
     user = Repo.insert! %User{id: "7488a646-e31f-11e4-aace-600308960662"}
-    conn = put conn, user_path(conn, :update, user), user: @valid_attrs
+    conn = put conn, user_path(conn, :update, user), data: %{attributes: @valid_attrs}
     assert json_response(conn, 200)["data"]["id"]
     assert Repo.get_by(User, @valid_attrs)
   end
 
   test "does not update chosen resource and renders errors when data is invalid", %{conn: conn} do
     user = Repo.insert! %User{id: "7488a646-e31f-11e4-aace-600308960662"}
-    conn = put conn, user_path(conn, :update, user), user: @invalid_attrs
+    conn = put conn, user_path(conn, :update, user), data: %{attributes: @invalid_attrs}
     assert json_response(conn, 422)["errors"] != %{}
   end
 

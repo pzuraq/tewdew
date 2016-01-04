@@ -3,45 +3,45 @@ defmodule Tewdew.TaskListController do
 
   alias Tewdew.TaskList
 
-  plug :scrub_params, "task_list" when action in [:create, :update]
+  plug :scrub_params, "data" when action in [:create, :update]
 
   def index(conn, _params) do
-    task_lists = Repo.all(TaskList)
-    render(conn, "index.json", task_lists: task_lists)
+    render conn, model: Repo.all(TaskList)
   end
 
-  def create(conn, %{"task_list" => task_list_params}) do
-    changeset = TaskList.changeset(%TaskList{}, task_list_params)
+  def show(conn, %{"id" => id}) do
+    task_list = TaskList |> Repo.get!(id) |> Repo.preload [:tasks]
+    render conn, model: task_list
+  end
+
+  def create(conn, %{"data" => %{"attributes" => attributes}}) do
+    changeset = TaskList.changeset(%TaskList{}, attributes)
 
     case Repo.insert(changeset) do
       {:ok, task_list} ->
         conn
         |> put_status(:created)
         |> put_resp_header("location", task_list_path(conn, :show, task_list))
-        |> render("show.json", task_list: task_list)
+        |> render(:show, data: task_list)
       {:error, changeset} ->
         conn
         |> put_status(:unprocessable_entity)
-        |> render(Tewdew.ChangesetView, "error.json", changeset: changeset)
+        |> render(:errors, data: changeset)
     end
   end
 
-  def show(conn, %{"id" => id}) do
+  def update(conn, %{"id" => id, "data" => %{"attributes" => attributes}}) do
     task_list = Repo.get!(TaskList, id)
-    render(conn, "show.json", task_list: task_list)
-  end
-
-  def update(conn, %{"id" => id, "task_list" => task_list_params}) do
-    task_list = Repo.get!(TaskList, id)
-    changeset = TaskList.changeset(task_list, task_list_params)
+    changeset = TaskList.changeset(task_list, attributes)
 
     case Repo.update(changeset) do
       {:ok, task_list} ->
-        render(conn, "show.json", task_list: task_list)
+        conn
+        |> render(:show, data: task_list)
       {:error, changeset} ->
         conn
         |> put_status(:unprocessable_entity)
-        |> render(Tewdew.ChangesetView, "error.json", changeset: changeset)
+        |> render(:errors, data: changeset)
     end
   end
 
