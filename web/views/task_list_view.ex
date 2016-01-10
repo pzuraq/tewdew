@@ -5,4 +5,6 @@ defmodule Tewdew.TaskListView do
   attributes [:name, :user_id]
 
   has_many :tasks, link: "/api/task-lists/:id/tasks"
+
+  def type, do: "task-list"
 end
