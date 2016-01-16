@@ -1,31 +1,24 @@
-defmodule Tewdew.TaskListController do
+defmodule Tewdew.TaskBoardController do
   use Tewdew.Web, :controller
 
-  alias Tewdew.TaskList
+  alias Tewdew.TaskBoard
 
   plug :scrub_params, "data" when action in [:create, :update]
 
-  def index(conn, %{"task_board_id" => task_board_id}) do
-    task_lists = Repo.all(from t in TaskList, where: t.task_board_id == ^task_board_id)
-                 |> Repo.preload [:tasks]
-                 
-    render conn, model: task_lists
-  end
-
   def show(conn, %{"id" => id}) do
-    task_list = TaskList |> Repo.get!(id) |> Repo.preload [:tasks]
-    render conn, model: task_list
+    task_board = TaskBoard |> Repo.get!(id) |> Repo.preload [:task_lists]
+    render conn, model: task_board
   end
 
   def create(conn, %{"data" => %{"attributes" => attributes}}) do
-    changeset = TaskList.changeset(%TaskList{}, attributes)
+    changeset = TaskBoard.changeset(%TaskBoard{}, attributes)
 
     case Repo.insert(changeset) do
-      {:ok, task_list} ->
+      {:ok, task_board} ->
         conn
         |> put_status(:created)
-        |> put_resp_header("location", task_list_path(conn, :show, task_list))
-        |> render(:show, data: task_list)
+        |> put_resp_header("location", task_board_path(conn, :show, task_board))
+        |> render(:show, data: task_board)
       {:error, changeset} ->
         conn
         |> put_status(:unprocessable_entity)
@@ -34,13 +27,13 @@ defmodule Tewdew.TaskListController do
   end
 
   def update(conn, %{"id" => id, "data" => %{"attributes" => attributes}}) do
-    task_list = Repo.get!(TaskList, id)
-    changeset = TaskList.changeset(task_list, attributes)
+    task_board = Repo.get!(TaskBoard, id)
+    changeset = TaskBoard.changeset(task_board, attributes)
 
     case Repo.update(changeset) do
-      {:ok, task_list} ->
+      {:ok, task_board} ->
         conn
-        |> render(:show, data: task_list)
+        |> render(:show, data: task_board)
       {:error, changeset} ->
         conn
         |> put_status(:unprocessable_entity)
@@ -49,11 +42,11 @@ defmodule Tewdew.TaskListController do
   end
 
   def delete(conn, %{"id" => id}) do
-    task_list = Repo.get!(TaskList, id)
+    task_board = Repo.get!(TaskBoard, id)
 
     # Here we use delete! (with a bang) because we expect
     # it to always work (and if it does not, it will raise).
-    Repo.delete!(task_list)
+    Repo.delete!(task_board)
 
     send_resp(conn, :no_content, "")
   end

@@ -25,11 +25,13 @@ defmodule Tewdew.Router do
   scope "/api", Tewdew do
     pipe_through :api
 
-    resources "/users", UserController, except: [:new, :edit]
+    resources "/users", UserController, except: [:new, :edit, :index]
 
-    resources "/task-lists", TaskListController, except: [:new, :edit] do
-      get "/tasks", TaskController, :index
+    resources "/task-boards", TaskBoardController, except: [:new, :edit, :index] do
+      get "/task-lists", TaskListController, :index
     end
+
+    resources "/task-lists", TaskListController, except: [:new, :edit, :index]
 
     resources "/tasks", TaskController, except: [:new, :edit, :index]
   end

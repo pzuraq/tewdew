@@ -1,8 +1,10 @@
 defmodule Tewdew.TaskListControllerTest do
   use Tewdew.ConnCase
 
+  alias Tewdew.TaskBoard
   alias Tewdew.TaskList
-  @valid_attrs %{id: "7488a646-e31f-11e4-aace-600308960662", name: "some content", user_id: "7488a646-e31f-11e4-aace-600308960662"}
+  alias Tewdew.Task
+  @valid_attrs %{id: "7488a646-e31f-11e4-aace-600308960662", name: "some content", task_board_id: "96e75730-6e17-4c28-be8d-5ec6db01e85e"}
   @invalid_attrs %{}
 
   setup %{conn: conn} do
@@ -14,31 +16,98 @@ defmodule Tewdew.TaskListControllerTest do
   end
 
   test "lists all entries on index", %{conn: conn} do
-    conn = get conn, task_list_path(conn, :index)
-    assert json_response(conn, 200)["data"] == []
-  end
+    task_list = Repo.insert! %TaskList{id: "7488a646-e31f-11e4-aace-600308960662", task_board_id: "96e75730-6e17-4c28-be8d-5ec6db01e85e"}
+    task = Repo.insert! %Task{id: "571f64c4-e013-4ea0-a2f2-615c0944a38d", task_list_id: "7488a646-e31f-11e4-aace-600308960662"}
 
-  test "shows chosen resource", %{conn: conn} do
-    task_list = Repo.insert! %TaskList{id: "7488a646-e31f-11e4-aace-600308960662"}
-    conn = get conn, task_list_path(conn, :show, task_list)
-    assert json_response(conn, 200)["data"] == %{
-      "type" => "tasklist",
-      "id" => task_list.id,
-      "attributes" => %{
-        "user-id" => task_list.user_id,
-        "name" => task_list.name
-      },
-      "links" => %{
-        "self" => "/api/task-lists/7488a646-e31f-11e4-aace-600308960662"
-      },
-      "relationships" => %{
-        "tasks" => %{
-          "links" => %{
-            "related" => "/api/task-lists/7488a646-e31f-11e4-aace-600308960662/tasks"
+    conn = get conn, Tewdew.Router.Helpers.task_board_task_list_path(conn, :index, "96e75730-6e17-4c28-be8d-5ec6db01e85e")
+    response = json_response(conn, 200)
+
+    assert response["data"] == [
+      %{
+        "type" => "task-list",
+        "id" => task_list.id,
+        "attributes" => %{
+          "task-board-id" => task_list.task_board_id,
+          "name" => task_list.name
+        },
+        "links" => %{
+          "self" => "/api/task-lists/#{task_list.id}"
+        },
+        "relationships" => %{
+          "tasks" => %{
+            "data" => [
+              %{
+                "type" => "task",
+                "id" => task.id
+              }
+            ]
           }
         }
       }
+    ]
+
+    assert response["included"] == [
+      %{
+        "type" => "task",
+        "links" => %{
+          "self" => "/api/tasks/#{task.id}"
+        },
+        "id" => task.id,
+        "attributes" => %{
+          "task-list-id" => task_list.id,
+          "ordinal" => task.ordinal,
+          "name" => task.name,
+          "is-complete" => task.is_complete
+        }
+      }
+    ]
+  end
+
+
+  test "shows chosen resource", %{conn: conn} do
+    task_list = Repo.insert! %TaskList{id: "7488a646-e31f-11e4-aace-600308960662"}
+    task = Repo.insert! %Task{id: "571f64c4-e013-4ea0-a2f2-615c0944a38d", task_list_id: "7488a646-e31f-11e4-aace-600308960662"}
+
+    conn = get conn, task_list_path(conn, :show, task_list)
+    response = json_response(conn, 200)
+
+    assert response["data"] == %{
+      "type" => "task-list",
+      "id" => task_list.id,
+      "attributes" => %{
+        "task-board-id" => task_list.task_board_id,
+        "name" => task_list.name
+      },
+      "links" => %{
+        "self" => "/api/task-lists/#{task_list.id}"
+      },
+      "relationships" => %{
+        "tasks" => %{
+          "data" => [
+            %{
+              "type" => "task",
+              "id" => task.id
+            }
+          ]
+        }
+      }
     }
+
+    assert response["included"] == [
+      %{
+        "type" => "task",
+        "links" => %{
+          "self" => "/api/tasks/#{task.id}"
+        },
+        "id" => task.id,
+        "attributes" => %{
+          "task-list-id" => task_list.id,
+          "ordinal" => task.ordinal,
+          "name" => task.name,
+          "is-complete" => task.is_complete
+        }
+      }
+    ]
   end
 
   test "does not show resource and instead throw error when id is nonexistent", %{conn: conn} do
