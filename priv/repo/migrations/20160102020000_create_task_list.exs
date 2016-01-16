@@ -4,7 +4,7 @@ defmodule Tewdew.Repo.Migrations.CreateTaskList do
   def up do
     create table(:task_lists, primary_key: false) do
       add :id, :uuid, primary_key: true, default: fragment("uuid_generate_v4()")
-      add :user_id, :uuid
+      add :task_board_id, :uuid
       add :name, :string
 
       timestamps

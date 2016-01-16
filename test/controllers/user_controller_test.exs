@@ -2,6 +2,8 @@ defmodule Tewdew.UserControllerTest do
   use Tewdew.ConnCase
 
   alias Tewdew.User
+  alias Tewdew.TaskBoard
+
   @valid_attrs %{email: "some content", id: "7488a646-e31f-11e4-aace-600308960662", password: "some content"}
   @invalid_attrs %{}
 
@@ -13,32 +15,54 @@ defmodule Tewdew.UserControllerTest do
     {:ok, conn: conn}
   end
 
-  test "lists all entries on index", %{conn: conn} do
-    conn = conn
-           |> put_req_header("accept", "application/vnd.api+json")
-           |> put_req_header("content-type", "application/vnd.api+json")
-           |> get user_path(conn, :index)
-    assert json_response(conn, 200)["data"] == []
-  end
-
   test "shows chosen resource", %{conn: conn} do
     user = Repo.insert! %User{id: "7488a646-e31f-11e4-aace-600308960662"}
+    task_board = Repo.insert! %TaskBoard{id: "ab00ab69-336c-4a12-9030-d5784d7a6e7d", user_id: "7488a646-e31f-11e4-aace-600308960662"}
+
     conn = get conn, user_path(conn, :show, user)
-    assert json_response(conn, 200)["data"] == %{
+    response = json_response(conn, 200)
+
+    assert response["data"] == %{
       "type" => "user",
       "id" => user.id,
       "attributes" => %{
         "email" => user.email
       },
       "links" => %{
-        "self" => "/api/users/7488a646-e31f-11e4-aace-600308960662"
+        "self" => "/api/users/#{user.id}"
       },
       "relationships" => %{
-        "task-lists" => %{
-          "data" => []
+        "task-boards" => %{
+          "data" => [
+            %{
+              "type" => "task-board",
+              "id" => task_board.id
+            }
+          ]
         }
       }
     }
+
+    assert response["included"] == [
+      %{
+        "type" => "task-board",
+        "id" => task_board.id,
+        "attributes" => %{
+          "user-id" => user.id,
+          "name" => task_board.name
+        },
+        "links" => %{
+          "self" => "/api/task-boards/#{task_board.id}"
+        },
+        "relationships" => %{
+          "task-lists" => %{
+            "links" => %{
+              "related" => "/api/task-boards/#{task_board.id}/task-lists"
+            }
+          }
+        }
+      }
+    ]
   end
 
   test "does not show resource and instead throw error when id is nonexistent", %{conn: conn} do

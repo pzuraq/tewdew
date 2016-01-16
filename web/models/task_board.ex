@@ -1,19 +1,19 @@
-defmodule Tewdew.TaskList do
+defmodule Tewdew.TaskBoard do
   use Tewdew.Web, :model
 
   @primary_key {:id, Ecto.UUID, []}
 
-  schema "task_lists" do
+  schema "task_boards" do
     field :name, :string
 
-    belongs_to :task_board, Tewdew.TaskBoard, type: Ecto.UUID
+    belongs_to :user, Tewdew.User, type: Ecto.UUID
 
-    has_many :tasks, Tewdew.Task
+    has_many :task_lists, Tewdew.TaskList
 
     timestamps
   end
 
-  @required_fields ~w(id task_board_id name)
+  @required_fields ~w(id user_id name)
   @optional_fields ~w()
 
   @doc """
@@ -22,7 +22,7 @@ defmodule Tewdew.TaskList do
   If no params are provided, an invalid changeset is returned
   with no validation performed.
   """
-  def changeset(model, params \\ nil) do
+  def changeset(model, params \\ :empty) do
     model
     |> cast(params, @required_fields, @optional_fields)
   end

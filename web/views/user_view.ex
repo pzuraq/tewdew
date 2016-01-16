@@ -4,9 +4,9 @@ defmodule Tewdew.UserView do
   location "/api/users/:id"
   attributes [:email]
 
-  has_many :task_lists, serializer: Tewdew.TaskListView, include: true
+  has_many :task_boards, serializer: Tewdew.TaskBoardView, include: true
 
-  def task_lists(user, _conn) do
-    user.task_lists
+  def task_boards(user, _conn) do
+    user.task_boards
   end
 end

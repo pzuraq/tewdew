@@ -5,11 +5,6 @@ defmodule Tewdew.TaskController do
 
   plug :scrub_params, "data" when action in [:create, :update]
 
-  def index(conn, %{"task_list_id" => task_list_id}) do
-    tasks = Repo.all(from t in Task, where: t.task_list_id == ^task_list_id)
-    render conn, model: tasks
-  end
-
   def show(conn, %{"id" => id}) do
     task = Task |> Repo.get!(id)
     render conn, model: task

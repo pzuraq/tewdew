@@ -13,11 +13,6 @@ defmodule Tewdew.TaskControllerTest do
     {:ok, conn: conn}
   end
 
-  test "lists all entries on index", %{conn: conn} do
-    conn = get conn, Tewdew.Router.Helpers.task_list_task_path(conn, :index, "7488a646-e31f-11e4-aace-600308960662")
-    assert json_response(conn, 200)["data"] == []
-  end
-
   test "shows chosen resource", %{conn: conn} do
     task = Repo.insert! %Task{id: "7488a646-e31f-11e4-aace-600308960662"}
     conn = get conn, task_path(conn, :show, task)

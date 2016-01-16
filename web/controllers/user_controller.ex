@@ -5,12 +5,8 @@ defmodule Tewdew.UserController do
 
   plug :scrub_params, "data" when action in [:create, :update]
 
-  def index(conn, _params) do
-    render conn, model: Repo.all(User)
-  end
-
   def show(conn, %{"id" => id}) do
-    user = User |> Repo.get!(id) |> Repo.preload [:task_lists]
+    user = User |> Repo.get!(id) |> Repo.preload [:task_boards]
     render conn, model: user
   end
 
